@@ -30,7 +30,12 @@ async def run_chat():
 
     client = MultiServerMCPClient(MCP_SERVERS)
 
-    tools = await client.get_tools()
+    try:
+        tools = await client.get_tools()
+    except Exception as e:
+        print(f"❌ Error getting tools from MCP servers: {e}")
+        print("Please ensure that both file-service (port 8000) and calculator-service (port 8001) MCP servers are running.")
+        return
 
     model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
     agent = create_agent(model, tools)

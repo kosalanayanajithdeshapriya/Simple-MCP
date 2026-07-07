@@ -11,7 +11,31 @@ from langchain.agents import create_agent
 
 load_dotenv()
 
-app = FastAPI()
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global agent
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("❌ Error: OPENAI_API_KEY is missing!")
+        yield
+        return
+
+    os.environ["OPENAI_API_KEY"] = api_key
+    
+    try:
+        client = MultiServerMCPClient(MCP_SERVERS)
+        tools = await client.get_tools()
+        model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        agent = create_agent(model, tools)
+    except Exception as e:
+        print(f"❌ Error initializing agent: {e}")
+        print("Please ensure that both file-service and calculator-service MCP servers are running.")
+    
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 MCP_SERVERS = {
     "file-service": {
@@ -33,20 +57,7 @@ class ChatResponse(BaseModel):
 agent = None
 chat_history = []
 
-@app.on_event("startup")
-async def startup_event():
-    global agent
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        print("❌ Error: OPENAI_API_KEY is missing!")
-        return
-
-    os.environ["OPENAI_API_KEY"] = api_key
-    
-    client = MultiServerMCPClient(MCP_SERVERS)
-    tools = await client.get_tools()
-    model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    agent = create_agent(model, tools)
+# The startup logic has been moved to the lifespan context manager above.
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
