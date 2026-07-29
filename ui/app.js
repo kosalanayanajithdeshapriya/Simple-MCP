@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatContainer = document.getElementById("chat-container");
     const sendBtn = document.getElementById("send-btn");
     const clearBtn = document.getElementById("clear-btn");
+    const csvInput = document.getElementById("csv-input");
+    const headerSubtitle = document.getElementById("header-subtitle");
 
     // Configure marked to use GitHub Flavored Markdown and line breaks
     if (window.marked) {
@@ -114,6 +116,44 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Chat error:", error);
         } finally {
             setInputState(false);
+        }
+    });
+
+    csvInput.addEventListener("change", async () => {
+        const file = csvInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.detail || "Upload failed");
+            }
+
+            headerSubtitle.textContent = `Loaded: ${file.name}`;
+            chatContainer.innerHTML += `
+                <div class="message system-message">
+                    <div class="message-content">Uploaded "${file.name}". Ask me anything about this data.</div>
+                </div>
+            `;
+            scrollToBottom();
+        } catch (error) {
+            chatContainer.innerHTML += `
+                <div class="message system-message">
+                    <div class="message-content">Upload failed: ${error.message}</div>
+                </div>
+            `;
+            scrollToBottom();
+            console.error("Upload error:", error);
+        } finally {
+            csvInput.value = "";
         }
     });
 

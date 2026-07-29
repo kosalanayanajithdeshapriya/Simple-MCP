@@ -6,17 +6,26 @@ wrapped in a small FastAPI web app with a chat UI.
 
 ```mermaid
 graph LR
-    User -->|browser| UI[FastAPI + Web UI<br/>ui_server.py]
+    User -->|browser + session cookie| UI[FastAPI + Web UI<br/>ui_server.py]
     UI -->|LangChain agent| OpenAI[(OpenAI GPT-4o-mini)]
     UI -->|MCP / streamable-http| FileSvc[File Service<br/>mcp_file_service.py]
     UI -->|MCP / streamable-http| CalcSvc[Calculator Service<br/>mcp_calculator_service.py]
-    FileSvc --> CSV[(demo.csv)]
+    FileSvc --> CSV[(data/&lt;session_id&gt;.csv)]
 ```
 
 - **`mcp_file_service.py`** — MCP server exposing CSV tools (`read_csv`, `add_row`, `update_qty`, `delete_row`)
 - **`mcp_calculator_service.py`** — MCP server exposing math tools (`subtract`, `divide`, `power`, `mod`)
 - **`ui_server.py`** — FastAPI app that wires both MCP servers into a LangChain agent and serves the chat UI in [`ui/`](ui/)
 - **`client.py`** — a plain terminal chat client, useful for quick local testing without the web UI
+
+### Bring-your-own CSV
+
+Visitors can upload their own CSV via the ⬆ button in the chat header. Each
+browser gets a session cookie, and its uploaded file is stored separately at
+`data/<session_id>.csv` — concurrent visitors never see or overwrite each
+other's data. The assistant can answer questions about whatever columns the
+CSV has; `add_row`/`update_qty`/`delete_row` only work if the uploaded CSV
+happens to use the `id`/`name`/`qty` schema they expect.
 
 ## Run locally
 
@@ -52,8 +61,8 @@ one-click deploy on [Render](https://render.com):
 
 **Note:** the free Render tier spins the service down after 15 minutes of
 inactivity, so the first request after idling takes ~30-60s to cold-start.
-`demo.csv` also lives on the container's ephemeral disk — it resets on every
-redeploy/restart.
+Uploaded CSVs also live on the container's ephemeral disk under `data/` — they
+reset on every redeploy/restart.
 
 ### Run the container locally
 

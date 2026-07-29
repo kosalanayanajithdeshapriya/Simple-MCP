@@ -131,7 +131,13 @@ body {
     font-weight: 500;
 }
 
-.clear-btn {
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.clear-btn,
+.upload-btn {
     background: var(--bg-glass);
     border: 1px solid var(--border-glass);
     color: var(--text-secondary);
@@ -146,7 +152,8 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-.clear-btn:hover {
+.clear-btn:hover,
+.upload-btn:hover {
     background: var(--bg-glass-hover);
     color: var(--text-primary);
     border-color: var(--border-highlight);

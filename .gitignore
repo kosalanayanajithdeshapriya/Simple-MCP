@@ -24,6 +24,9 @@ htmlcov/
 *.swp
 *.swo
 
+# Per-session uploaded CSVs
+data/
+
 # OS generated files
 .DS_Store
 .DS_Store?
