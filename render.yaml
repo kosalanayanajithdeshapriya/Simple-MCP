@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: simple-mcp-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ENV
+        value: production
+    healthCheckPath: /
